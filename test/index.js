@@ -5,17 +5,35 @@ const http = require('http')
 
 test('server', (t) => {
   const server = create(6000)
-  request((data) => {
+
+  const myToken = 'abcdef'
+  const video = 'hello_mp4'
+  const date = Date.now()
+  const progress = 0.5
+  const payload = JSON.stringify({ date, progress })
+
+  request(`/${myToken}/${video}=${payload}`, (data) => {
     console.log(data)
-    server.close()
-    t.end()
   })
+
+  request(`/${myToken}`, (data) => {
+    console.log(data)
+  })
+
+  request(`/${myToken}/${video}`, (data) => {
+    console.log(data)
+  })
+
+  setTimeout(() => {
+    server.close()
+  }, 2e3)
 })
 
-function request (cb, path, payload) {
+function request (path, cb) {
   const req = http.request({
     hostname: 'localhost',
     port: 6000,
+    path: path || '',
     method: 'GET',
     withCredentials: false
   }, function (res) {

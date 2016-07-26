@@ -1,0 +1,24 @@
+{
+  "name": "minimal-key-store",
+  "version": "0.0.1",
+  "main": "./lib/index.js",
+  "scripts": {
+    "start": "node ./lib/index.js",
+    "test": "node test | tap-difflet && standard",
+    "watch": "nodemon test | tap-difflet",
+    "cover": "istanbul cover --report none --print detail test/index.js",
+    "docs": "node_modules/vigour-doc/bin/vdoc",
+    "travis": "npm run cover -s && istanbul report lcov && ((cat coverage/lcov.info | coveralls) || exit 0) && standard"
+  },
+  "author": "Vigour.io <dev@vigour.io>",
+  "license": "ICS",
+  "devDependencies": {
+    "tape": "^4.4.0",
+    "tap-difflet": "0.4.0",
+    "nodemon": "^1.9.1",
+    "coveralls": "^2.11.9",
+    "istanbul": "^0.4.3",
+    "standard": "^7.0.1",
+    "pre-commit": "^1.1.3"
+  }
+}

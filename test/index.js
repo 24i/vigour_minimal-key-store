@@ -22,18 +22,32 @@ test('server', { timeout: 10e3 }, (t) => {
   request(`/${myToken}/1/progress`, (data) => {
     t.same(data, progress, 'returns progress')
   })
-  const objbig = {}
-  for (let i = 0; i < 100; i++) {
-    objbig['big' + i] = { date: date + i, progress }
-  }
-  const bigpayload = JSON.stringify(objbig)
-  request(`/${myToken}=${bigpayload}`, () => {
-    request(`/${myToken}?limit=2&sort=date`, (data) => {
-      t.same(data, { big99: objbig.big99, big98: objbig.big98 }, 'sort and limit')
-      server.close()
-      t.end()
+
+  request('/a/b/c/d=100', (data) => {
+    t.same(data, 100, 'returns 100')
+    request('/a/b/c/d', (data) => {
+      t.same(data, 100, 'returns 100')
+      request('/a/b/c/d=200', (data) => {
+        t.same(data, 200, 'returns 200')
+        big()
+      })
     })
   })
+
+  function big () {
+    const objbig = {}
+    for (let i = 0; i < 100; i++) {
+      objbig['big' + i] = { date: date + i, progress }
+    }
+    const bigpayload = JSON.stringify(objbig)
+    request(`/${myToken}=${bigpayload}`, () => {
+      request(`/${myToken}?limit=2&sort=date`, (data) => {
+        t.same(data, { big99: objbig.big99, big98: objbig.big98 }, 'sort and limit')
+        server.close()
+        t.end()
+      })
+    })
+  }
 })
 
 function request (path, cb) {

@@ -29,7 +29,10 @@ test('server', { timeout: 10e3 }, (t) => {
       t.same(data, 100, 'returns 100')
       request('/a/b/c/d=200', (data) => {
         t.same(data, 200, 'returns 200')
-        big()
+        request(`/${myToken}/1=null`, (data) => {
+          t.same(data, '', 'remove video - returns empty string')
+          big()
+        }, true)
       })
     })
   })
@@ -50,7 +53,7 @@ test('server', { timeout: 10e3 }, (t) => {
   }
 })
 
-function request (path, cb) {
+function request (path, cb, flat) {
   const req = http.request({
     hostname: 'localhost',
     port: 6000,
@@ -63,7 +66,7 @@ function request (path, cb) {
       str += chunk.toString()
     })
     res.on('end', () => {
-      if (cb) { cb(JSON.parse(str)) }
+      if (cb) { cb(flat ? str : JSON.parse(str)) }
     })
   })
   req.end()

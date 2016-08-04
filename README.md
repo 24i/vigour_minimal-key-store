@@ -4,5 +4,4 @@
 [![npm version](https://badge.fury.io/js/vigour-minimal-key-store.svg)](https://badge.fury.io/js/minimal-key-store)
 [![Coverage Status](https://coveralls.io/repos/github/vigour-io/minimal-key-store/badge.svg?branch=master)](https://coveralls.io/github/vigour-io/minimal-key-store?branch=master)
 
-simple object storage and retrieval
-when you add a field `dynamodb` in the packge uses dynamodb for persistence
+simple object storage and retrieval, uses state

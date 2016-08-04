@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "./lib/index.js",
   "scripts": {
-    "start": "node ./lib/index.js",
+    "start": "node ./bin/server.js",
     "test": "node test | tap-difflet && standard",
     "watch": "nodemon test | tap-difflet",
     "cover": "istanbul cover --report none --print detail test/index.js",

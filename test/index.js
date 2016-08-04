@@ -5,69 +5,85 @@ const http = require('http')
 
 test('server', { timeout: 10e3 }, (t) => {
   const server = create(6000)
-  const myToken = 'abcdef'
   const date = Date.now()
   const progress = 0.5
   const obj = { date, progress }
   const payload = JSON.stringify(obj)
-  request(`/${myToken}/1=${payload}`, (data) => {
-    t.same(data, obj, 'returns payload')
-  })
-  request(`/${myToken}`, (data) => {
-    t.same(data, { 1: obj }, 'returns token keys')
-  })
-  request(`/${myToken}/1`, (data) => {
-    t.same(data, obj, 'returns video')
-  })
-  request(`/${myToken}/1/progress`, (data) => {
-    t.same(data, progress, 'returns progress')
-  })
-
-  request('/a/b/c/d=100', (data) => {
-    t.same(data, 100, 'returns 100')
-    request('/a/b/c/d', (data) => {
-      t.same(data, 100, 'returns 100')
-      request('/a/b/c/d=200', (data) => {
-        t.same(data, 200, 'returns 200')
-        request(`/${myToken}/1=null`, (data) => {
-          t.same(data, '', 'remove video - returns empty string')
-          big()
-        }, true)
-      })
-    })
-  })
-
-  function big () {
-    const objbig = {}
-    for (let i = 0; i < 100; i++) {
-      objbig['big' + i] = { date: date + i, progress }
-    }
-    const bigpayload = JSON.stringify(objbig)
-    request(`/${myToken}=${bigpayload}`, () => {
-      request(`/${myToken}?limit=2&sort=date`, (data) => {
-        t.same(data, { big99: objbig.big99, big98: objbig.big98 }, 'sort and limit')
-        server.close()
-        t.end()
-      })
-    })
+  const objbig = {}
+  for (let i = 0; i < 100; i++) {
+    objbig['big' + i] = { date: date + i, progress }
   }
+  const bigpayload = JSON.stringify(objbig)
+
+  request(`/token/1=${payload}`)
+    .then((data) => t.same(data, obj, 'returns payload'))
+
+  request('/token')
+    .then((data) => t.same(data, { 1: obj }, 'returns token keys'))
+
+  request('/token/1')
+    .then((data) => t.same(data, obj, 'returns video'))
+
+  request('/token/1/progress')
+    .then((data) => t.same(data, progress, 'returns progress'))
+
+  request('/a/b/c/d=100')
+    .then((data) => {
+      t.same(data, 100, 'returns 100')
+      return request('/a/b/c/d')
+    })
+    .then((data) => {
+      t.same(data, 100, 'returns 100')
+      return request('/a/b/c/d=200')
+    })
+    .then((data) => {
+      t.same(data, 200, 'returns 200')
+      return request('/token/1=null', true)
+    })
+    .then((data) => {
+      t.same(data, '', 'remove video - returns empty string')
+      return request(`/token=${bigpayload}`)
+    })
+    .then(() => request('/token?limit=2&sort=date'))
+    .then((data) => {
+      t.same(data, { big99: objbig.big99, big98: objbig.big98 }, 'sort and limit')
+      server.close()
+      t.end()
+    })
 })
 
-function request (path, cb, flat) {
-  const req = http.request({
-    hostname: 'localhost',
-    port: 6000,
-    path: path || '',
-    method: 'GET',
-    withCredentials: false
-  }, function (res) {
-    var str = ''
-    res.on('data', (chunk) => {
-      str += chunk.toString()
+test('clear server', (t) => {
+  const server = create(6000)
+  request('/field=hello')
+    .then(() => request('/RESET_STATE_CACHE'))
+    .then((data) => {
+      t.same(data, {}, 'returns empty object')
+      return request('/field')
     })
-    res.on('end', () => {
-      if (cb) { cb(flat ? str : JSON.parse(str)) }
+    .then((data) => {
+      t.same(data, {}, 'removed field')
+      t.end()
+      server.close()
     })
+})
+
+function request (path, flat) {
+  return new Promise((resolve, reject) => {
+    const req = http.request({
+      hostname: 'localhost',
+      port: 6000,
+      path: path || '',
+      method: 'GET',
+      withCredentials: false
+    }, function (res) {
+      var str = ''
+      res.on('data', (chunk) => {
+        str += chunk.toString()
+      })
+      res.on('end', () => {
+        resolve(flat ? str : JSON.parse(str))
+      })
+    })
+    req.end()
   })
-  req.end()
 }

@@ -67,6 +67,16 @@ test('clear server', (t) => {
     })
 })
 
+test('start state', (t) => {
+  const server = create(6000, { hello: true })
+  request('hello')
+    .then((data) => {
+      t.same(data, true, 'return field')
+      t.end()
+      server.close()
+    })
+})
+
 function request (path, flat) {
   return new Promise((resolve, reject) => {
     const req = http.request({
